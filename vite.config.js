@@ -6,5 +6,5 @@ import react from "@vitejs/plugin-react";
 // Si alguna vez renombrás el repositorio, actualizá este valor también.
 export default defineConfig({
   plugins: [react()],
-  base: "/las-de-caro/",
+ base: "/",
 });
