@@ -42,6 +42,11 @@ const DEFAULT_SETTINGS = {
   whatsapp: "5493743481709",
   adminPassword: "",
   instagram: "lasdecaro1",
+  categories: [...CATEGORIES],
+  colors: [...COLORES],
+  aboutTitle: "Hecho con amor, pensado para tu casa.",
+  aboutText:
+    "Cada objeto tiene algo de nuestras manos, de los materiales que elegimos y de esos pequeños detalles que hacen que una casa se sienta propia.",
 };
 
 const DEMO_PRODUCTS = [
@@ -426,20 +431,43 @@ function AdminGate({ hasPassword, checkPassword, onSuccess, onResetPassword, onB
 /* ============================ Panel de administración ============================ */
 function AdminPanelContent({ products, settings, imageCache, savedPing, onLock, onBackToStore, onAddProduct, onUpdateProduct, onDeleteProduct, onToggleVisible, onReorder, onSaveSettings }) {
   const ink = "#3A3128";
+  const availableCategories = (settings.categories && settings.categories.length) ? settings.categories : CATEGORIES;
+  const availableColors = (settings.colors && settings.colors.length) ? settings.colors : COLORES;
   const [draftId, setDraftId] = useState(() => `p-${Date.now()}`);
-  const emptyForm = { name: "", price: "", category: CATEGORIES[0], color: COLORES[0], description: "", images: [] };
+  const emptyForm = { name: "", price: "", category: availableCategories[0], color: availableColors[0], description: "", images: [] };
   const [form, setForm] = useState(emptyForm);
   const [localSettings, setLocalSettings] = useState(settings);
   const [tab, setTab] = useState("productos");
   const [editingId, setEditingId] = useState(null);
   const [productMsg, setProductMsg] = useState("");
+  const [newCategory, setNewCategory] = useState("");
+  const [newColor, setNewColor] = useState("");
 
   useEffect(() => setLocalSettings(settings), [settings]);
 
   function resetForm() {
-    setForm(emptyForm);
+    setForm({ ...emptyForm, category: availableCategories[0], color: availableColors[0] });
     setDraftId(`p-${Date.now()}`);
     setEditingId(null);
+  }
+
+  function addCategory() {
+    const v = newCategory.trim();
+    if (!v || localSettings.categories?.includes(v)) return;
+    setLocalSettings({ ...localSettings, categories: [...(localSettings.categories || []), v] });
+    setNewCategory("");
+  }
+  function removeCategory(c) {
+    setLocalSettings({ ...localSettings, categories: (localSettings.categories || []).filter((x) => x !== c) });
+  }
+  function addColor() {
+    const v = newColor.trim();
+    if (!v || localSettings.colors?.includes(v)) return;
+    setLocalSettings({ ...localSettings, colors: [...(localSettings.colors || []), v] });
+    setNewColor("");
+  }
+  function removeColor(c) {
+    setLocalSettings({ ...localSettings, colors: (localSettings.colors || []).filter((x) => x !== c) });
   }
 
   function startEdit(product) {
@@ -570,7 +598,7 @@ function AdminPanelContent({ products, settings, imageCache, savedPing, onLock, 
                       className="w-full text-sm px-3 py-2 rounded-md bg-white"
                       style={{ border: "1px solid #D8CDBB" }}
                     >
-                      {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                      {availableCategories.map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </Field>
                 </div>
@@ -582,7 +610,7 @@ function AdminPanelContent({ products, settings, imageCache, savedPing, onLock, 
                     className="w-full text-sm px-3 py-2 rounded-md bg-white"
                     style={{ border: "1px solid #D8CDBB" }}
                   >
-                    {COLORES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    {availableColors.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </Field>
 
@@ -660,6 +688,88 @@ function AdminPanelContent({ products, settings, imageCache, savedPing, onLock, 
                     style={{ border: "1px solid #D8CDBB" }}
                   />
                 </Field>
+
+                <div className="h-px my-1" style={{ background: "#E6D9C2" }} />
+
+                <Field label="Categorías de productos">
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {(localSettings.categories || []).map((c) => (
+                      <span key={c} className="flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-full text-xs" style={{ border: "1px solid #D8CDBB", background: "#fff" }}>
+                        {c}
+                        <button type="button" onClick={() => removeCategory(c)} className="p-0.5" style={{ color: "#A34632" }} aria-label={`Quitar ${c}`}>
+                          <X size={11} />
+                        </button>
+                      </span>
+                    ))}
+                    {(!localSettings.categories || localSettings.categories.length === 0) && (
+                      <span className="text-xs" style={{ color: "#A99D86" }}>No hay categorías todavía.</span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCategory(); } }}
+                      placeholder="Nueva categoría"
+                      className="flex-1 text-sm px-3 py-2 rounded-md bg-white"
+                      style={{ border: "1px solid #D8CDBB" }}
+                    />
+                    <button type="button" onClick={addCategory} className="px-3 py-2 rounded-md text-xs" style={{ border: "1px solid #D8CDBB", color: "#3A3128" }}>
+                      Agregar
+                    </button>
+                  </div>
+                </Field>
+
+                <Field label="Colores / materiales">
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {(localSettings.colors || []).map((c) => (
+                      <span key={c} className="flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-full text-xs" style={{ border: "1px solid #D8CDBB", background: "#fff" }}>
+                        {c}
+                        <button type="button" onClick={() => removeColor(c)} className="p-0.5" style={{ color: "#A34632" }} aria-label={`Quitar ${c}`}>
+                          <X size={11} />
+                        </button>
+                      </span>
+                    ))}
+                    {(!localSettings.colors || localSettings.colors.length === 0) && (
+                      <span className="text-xs" style={{ color: "#A99D86" }}>No hay colores todavía.</span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      value={newColor}
+                      onChange={(e) => setNewColor(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addColor(); } }}
+                      placeholder="Nuevo color o material"
+                      className="flex-1 text-sm px-3 py-2 rounded-md bg-white"
+                      style={{ border: "1px solid #D8CDBB" }}
+                    />
+                    <button type="button" onClick={addColor} className="px-3 py-2 rounded-md text-xs" style={{ border: "1px solid #D8CDBB", color: "#3A3128" }}>
+                      Agregar
+                    </button>
+                  </div>
+                </Field>
+
+                <div className="h-px my-1" style={{ background: "#E6D9C2" }} />
+
+                <Field label="Título de la sección 'Sobre las de Caro'">
+                  <input
+                    value={localSettings.aboutTitle}
+                    onChange={(e) => setLocalSettings({ ...localSettings, aboutTitle: e.target.value })}
+                    placeholder="Hecho con amor, pensado para tu casa."
+                    className="w-full text-sm px-3 py-2 rounded-md bg-white"
+                    style={{ border: "1px solid #D8CDBB" }}
+                  />
+                </Field>
+                <Field label="Texto de la sección 'Sobre las de Caro'">
+                  <textarea
+                    value={localSettings.aboutText}
+                    onChange={(e) => setLocalSettings({ ...localSettings, aboutText: e.target.value })}
+                    rows={4}
+                    className="w-full text-sm px-3 py-2 rounded-md bg-white resize-none"
+                    style={{ border: "1px solid #D8CDBB" }}
+                  />
+                </Field>
+
                 <button
                   type="button"
                   onClick={() => onSaveSettings(localSettings)}
@@ -974,7 +1084,7 @@ export default function LasDeCaro() {
   }, [products, activeCategory, query]);
 
   const ink = "#3A3128";
-  const cats = ["Todos", ...CATEGORIES];
+  const cats = ["Todos", ...((settings.categories && settings.categories.length) ? settings.categories : CATEGORIES)];
   const instaUrl = `https://www.instagram.com/${settings.instagram || "lasdecaro1"}/`;
 
   if (!ready) {
@@ -1160,10 +1270,9 @@ export default function LasDeCaro() {
           <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-6 items-center">
             <Sprig className="hidden sm:block w-20 h-32" />
             <div>
-              <h2 className="font-display italic text-3xl sm:text-4xl leading-tight">Hecho con amor, pensado para tu casa.</h2>
-              <p className="mt-4 text-sm leading-relaxed max-w-lg" style={{ color: "#6B6155" }}>
-                Cada objeto tiene algo de nuestras manos, de los materiales que elegimos y de esos pequeños
-                detalles que hacen que una casa se sienta propia.
+              <h2 className="font-display italic text-3xl sm:text-4xl leading-tight">{settings.aboutTitle || DEFAULT_SETTINGS.aboutTitle}</h2>
+              <p className="mt-4 text-sm leading-relaxed max-w-lg whitespace-pre-line" style={{ color: "#6B6155" }}>
+                {settings.aboutText || DEFAULT_SETTINGS.aboutText}
               </p>
               <a href="#ideas" className="inline-block mt-6 px-5 py-2.5 rounded-full text-sm" style={{ background: ink, color: "#F7F2E7" }}>CONOCÉ NUESTRA HISTORIA</a>
             </div>
